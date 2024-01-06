@@ -1,13 +1,8 @@
-const XLSX = require('xlsx');
-const express = require('express');
-const app = express();
-const cors = require('cors');
+import * as XLSX from 'xlsx';
+import express from 'express';
+import cors from 'cors';
 const fileUpload = require('express-fileupload');
-const moment = require('moment');
-
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-app.use(fileUpload());
+import moment from 'moment';
 
 interface MonthlyData {
     mrr: number;
@@ -15,6 +10,18 @@ interface MonthlyData {
     churnedCustomers: number;
 }
 
+interface SpreadsheetRow {
+    'data início': string;
+    valor: number;
+    periodicidade: string;
+    'data cancelamento'?: string;
+}
+
+const app = express();
+
+app.use(cors({ origin: '*' }));
+app.use(express.json());
+app.use(fileUpload());
 
 app.post('/upload', (req: any, res: any) => {
     if (!req.files || !req.files.spreadsheet) {
@@ -23,16 +30,15 @@ app.post('/upload', (req: any, res: any) => {
 
     const workbook = XLSX.read(req.files.spreadsheet.data, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
-    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const jsonData: SpreadsheetRow[] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
     let monthlyData: Record<string, MonthlyData> = {};
 
-    jsonData.forEach((row: any) => {
-        const startDate = moment(row['data início']);
-        const monthYear = startDate.format('MM-YYYY');
+    jsonData.forEach(row => {
+        const startMonth = moment(row['data início']).format('MM-YYYY');
 
-        if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { mrr: 0, totalCustomers: 0, churnedCustomers: 0 };
+        if (!monthlyData[startMonth]) {
+            monthlyData[startMonth] = { mrr: 0, totalCustomers: 0, churnedCustomers: 0 };
         }
 
         let monthlyValue = row.valor;
@@ -40,22 +46,19 @@ app.post('/upload', (req: any, res: any) => {
             monthlyValue /= 12;
         }
 
-        if (row.status === 'Ativa') {
-            monthlyData[monthYear].mrr += monthlyValue;
-            monthlyData[monthYear].totalCustomers += 1;
-        }
+        monthlyData[startMonth].mrr += monthlyValue;
+        monthlyData[startMonth].totalCustomers += 1;
 
         if (row['data cancelamento']) {
-            monthlyData[monthYear].churnedCustomers += 1;
+            monthlyData[startMonth].churnedCustomers += 1;
         }
     });
 
-    let monthlyMRR: any = [];
-    let monthlyChurnRate: any = [];
+    let monthlyMRR = [];
+    let monthlyChurnRate = [];
 
     for (let [month, data] of Object.entries(monthlyData)) {
         monthlyMRR.push({ month, value: data.mrr.toFixed(2) });
-    
         let churnRate = (data.churnedCustomers / data.totalCustomers) * 100 || 0;
         monthlyChurnRate.push({ month, value: churnRate.toFixed(2) });
     }
