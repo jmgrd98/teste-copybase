@@ -1,46 +1,64 @@
 <template>
-  <div>
-    <input type="file" @change="onFileChange" />
-    <table v-if="jsonData">
-      <tr v-for="(row, index) in jsonData" :key="index">
-        <td v-for="(val, key) in row" :key="key">
-          <input v-model="row[key]" />
-        </td>
-      </tr>
-    </table>
-    <button @click="saveFile" v-if="jsonData">Save Changes</button>
+  <div class="container mx-auto p-4">
+    <div class="flex flex-col items-center">
+      <input type="file" class="block w-full text-sm text-gray-500
+          file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-violet-50 file:text-violet-700
+          hover:file:bg-violet-100"
+          @change="handleFileChange" />
+      <button @click="uploadFile"
+              class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Upload
+      </button>
+    </div>
+    <div v-if="mrr || churnRate" class="mt-4">
+      <div v-if="mrr" class="text-green-500">Monthly Recurring Revenue (MRR): {{ mrr }}</div>
+      <div v-if="churnRate" class="text-blue-500">Churn Rate: {{ churnRate }}</div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import * as XLSX from 'xlsx';
+import axios from 'axios';
 
-const jsonData = ref(null);
+const file = ref(null);
+const mrr = ref(null);
+const churnRate = ref(null);
 
-function onFileChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (!target.files) return;
-  const file = target.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = new Uint8Array(e.target?.result as ArrayBuffer);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    jsonData.value = XLSX.utils.sheet_to_json(worksheet);
-  };
-  reader.readAsArrayBuffer(file);
-}
+const handleFileChange = (event) => {
+  file.value = event.target.files[0];
+};
 
-function saveFile() {
-  const worksheet = XLSX.utils.json_to_sheet(jsonData.value);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-  XLSX.writeFile(workbook, 'updated_file.xlsx');
-}
+const uploadFile = async () => {
+  if (!file.value) {
+    alert("Please select a file first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('spreadsheet', file.value);
+
+  try {
+    const response = await axios.post('http://localhost:3000/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    mrr.value = response.data.MRR;
+    churnRate.value = response.data.ChurnRate;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+  }
+};
 </script>
 
-<style scoped>
 
+
+
+
+<style scoped>
+/* Add any additional styles here */
 </style>
