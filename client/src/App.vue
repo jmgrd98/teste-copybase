@@ -18,17 +18,23 @@
       <div v-if="churnRate" class="text-blue-500">Churn Rate: {{ churnRate }}</div>
     </div>
   </div>
+
+  <div>
+    <svg id="mrrChart"></svg>
+    <svg id="churnRateChart"></svg>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import * as d3 from 'd3';
 import axios from 'axios';
 
 const file = ref(null);
-const mrr = ref(null);
-const churnRate = ref(null);
+const mrrData = ref([]);
+const churnRateData = ref([]);
 
-const handleFileChange = (event) => {
+const handleFileChange = (event: any) => {
   file.value = event.target.files[0];
 };
 
@@ -47,13 +53,78 @@ const uploadFile = async () => {
         'Content-Type': 'multipart/form-data'
       }
     });
-    mrr.value = response.data.MRR;
-    churnRate.value = response.data.ChurnRate;
+    mrrData.value = response.data.monthlyMRR;
+    churnRateData.value = response.data.monthlyChurnRate;
+    console.log('MRR Data:', response.data.monthlyMRR); // Debugging
+    console.log('Churn Rate Data:', response.data.monthlyChurnRate);
+    createLineChart('#mrrChart', mrrData.value, 'MRR');
+    createLineChart('#churnRateChart', churnRateData.value, 'Churn Rate');
   } catch (error) {
     console.error("Error uploading file:", error);
   }
 };
+
+const createLineChart = (selector: string, data: any[], label: string) => {
+  console.log('Creating chart for:', label, data);
+  const margin = { top: 20, right: 30, bottom: 30, left: 40 },
+        width = 500 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom;
+
+  // Clear existing content
+  d3.select(selector).selectAll("*").remove();
+
+  // Create SVG container
+  const svg = d3.select(selector)
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // Create scales
+  const x = d3.scaleBand()
+    .domain(data.map(d => d.month))
+    .range([0, width])
+    .padding(0.1);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => +d.value)])
+    .nice()
+    .range([height, 0]);
+
+  // Add X axis
+  svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(x));
+
+  // Add Y axis
+  svg.append("g")
+    .call(d3.axisLeft(y));
+
+  // Add line path
+  svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "steelblue")
+    .attr("stroke-width", 1.5)
+    .attr("d", d3.line()
+      .x(d => x(d.month) + x.bandwidth() / 2)
+      .y(d => y(+d.value))
+    );
+
+  // Add labels
+  svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + margin.top + 20)
+    .text(label);
+};
+
+onMounted(() => {
+  // Optionally, initialize charts with pre-loaded data
+});
 </script>
+
+
 
 
 
