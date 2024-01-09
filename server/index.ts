@@ -34,6 +34,19 @@ function excelDateToJSDate(serial: number | string): Date {
     return new Date(utc_value * 1000);
 }
 
+function calculateARPU(jsonData: any) {
+    const totalRevenue = jsonData.reduce((sum: any, row: any) => sum + row.valor, 0);
+    const uniqueCustomers = new Set(jsonData.map((row: any) => row['ID assinante'])).size;
+    return uniqueCustomers > 0 ? totalRevenue / uniqueCustomers : 0;
+}
+
+function calculateLTV(jsonData: any) {
+    const arpu = calculateARPU(jsonData);
+    const averageCustomerLifespan = 12;
+    return arpu * averageCustomerLifespan;
+}
+
+
 
 app.post('/upload', (req: any, res: any) => {
     if (!req.files || !req.files.spreadsheet) {
@@ -86,7 +99,10 @@ app.post('/upload', (req: any, res: any) => {
         monthlyChurnRate.push({ month, value: churnRate.toFixed(2) });
     }
 
-    res.send({ monthlyMRR, monthlyChurnRate });
+    const arpu = calculateARPU(jsonData);
+    const ltv = calculateLTV(jsonData);
+
+    res.send({ monthlyMRR, monthlyChurnRate, arpu, ltv });
 });
 
 const port = 3000;
