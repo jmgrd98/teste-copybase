@@ -80,10 +80,10 @@ const mrrChartData = computed(() => ({
 }));
 
 const churnRateChartData = computed(() => ({
-  labels: churnRateData.value.map(item => item.month),
+  labels: churnRateData.value.map((item: any) => item.month),
   datasets: [{
     label: 'Churn Rate',
-    data: churnRateData.value.map(item => parseFloat(item.value))
+    data: churnRateData.value.map((item: any) => parseFloat(item.value))
   }]
 }));
 
