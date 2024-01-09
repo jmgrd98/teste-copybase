@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 const fileUpload = require('express-fileupload');
 import moment from 'moment';
@@ -35,22 +35,33 @@ app.post('/upload', (req: any, res: any) => {
     let monthlyData: Record<string, MonthlyData> = {};
 
     jsonData.forEach(row => {
-        const startMonth = moment(row['data início']).format('MM-YYYY');
+        const startDate = moment(row['data início'], 'DD/MM/YYYY');
+        const endDate = row['data cancelamento'] ? moment(row['data cancelamento'], 'DD/MM/YYYY') : moment();
 
-        if (!monthlyData[startMonth]) {
-            monthlyData[startMonth] = { mrr: 0, totalCustomers: 0, churnedCustomers: 0 };
+        if (!startDate.isValid() || (row['data cancelamento'] && !endDate.isValid())) {
+            console.error('Invalid date format in spreadsheet row:', row);
+            return;
         }
-
         let monthlyValue = row.valor;
         if (row.periodicidade === 'Anual') {
             monthlyValue /= 12;
         }
 
-        monthlyData[startMonth].mrr += monthlyValue;
-        monthlyData[startMonth].totalCustomers += 1;
+        for (let m = moment(startDate); m.isBefore(endDate, 'month'); m.add(1, 'month')) {
+            const monthKey = m.format('MM-YYYY');
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = { mrr: 0, totalCustomers: 0, churnedCustomers: 0 };
+            }
+            monthlyData[monthKey].mrr += monthlyValue;
+            monthlyData[monthKey].totalCustomers += 1;
+        }
 
         if (row['data cancelamento']) {
-            monthlyData[startMonth].churnedCustomers += 1;
+            const churnMonth = endDate.format('MM-YYYY');
+            if (!monthlyData[churnMonth]) {
+                monthlyData[churnMonth] = { mrr: 0, totalCustomers: 0, churnedCustomers: 0 };
+            }
+            monthlyData[churnMonth].churnedCustomers += 1;
         }
     });
 
@@ -59,7 +70,7 @@ app.post('/upload', (req: any, res: any) => {
 
     for (let [month, data] of Object.entries(monthlyData)) {
         monthlyMRR.push({ month, value: data.mrr.toFixed(2) });
-        let churnRate = (data.churnedCustomers / data.totalCustomers) * 100 || 0;
+        let churnRate = data.totalCustomers > 0 ? (data.churnedCustomers / data.totalCustomers) * 100 : 0;
         monthlyChurnRate.push({ month, value: churnRate.toFixed(2) });
     }
 

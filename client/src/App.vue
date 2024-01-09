@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div class="flex gap-5 items-center">
+  <div class="flex gap-5 items-center chart-container">
 
     <BarChart
       v-if="mrrData.length"
@@ -97,12 +97,9 @@ onMounted(() => {
 });
 </script>
 
-
-
-
-
-
-
 <style scoped>
-/* Add any additional styles here */
+.chart-container {
+  max-width: 600px;
+  margin: auto;
+}
 </style>
