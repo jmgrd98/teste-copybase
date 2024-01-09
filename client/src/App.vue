@@ -72,10 +72,10 @@ const ltvData = ref(0);
 
 
 const mrrChartData = computed(() => ({
-  labels: mrrData.value.map(item => item.month),
+  labels: mrrData.value.map((item: any) => item.month),
   datasets: [{
     label: 'MRR',
-    data: mrrData.value.map(item => item.value)
+    data: mrrData.value.map((item: any) => item.value)
   }]
 }));
 
