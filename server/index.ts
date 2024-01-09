@@ -23,6 +23,18 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(fileUpload());
 
+function excelDateToJSDate(serial: number | string): Date {
+    const serialNumber = typeof serial === 'string' ? parseFloat(serial) : serial;
+    if (isNaN(serialNumber)) {
+        throw new Error('Invalid serial date format');
+    }
+
+    const utc_days = Math.floor(serialNumber - 25569);
+    const utc_value = utc_days * 86400; 
+    return new Date(utc_value * 1000);
+}
+
+
 app.post('/upload', (req: any, res: any) => {
     if (!req.files || !req.files.spreadsheet) {
         return res.status(400).send('No file uploaded.');
@@ -35,8 +47,8 @@ app.post('/upload', (req: any, res: any) => {
     let monthlyData: Record<string, MonthlyData> = {};
 
     jsonData.forEach(row => {
-        const startDate = moment(row['data início'], 'DD/MM/YYYY');
-        const endDate = row['data cancelamento'] ? moment(row['data cancelamento'], 'DD/MM/YYYY') : moment();
+        const startDate = moment(excelDateToJSDate(row['data início']));
+        const endDate = row['data cancelamento'] ? moment(excelDateToJSDate(row['data cancelamento'])) : moment();
 
         if (!startDate.isValid() || (row['data cancelamento'] && !endDate.isValid())) {
             console.error('Invalid date format in spreadsheet row:', row);
