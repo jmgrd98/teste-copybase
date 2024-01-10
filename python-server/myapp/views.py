@@ -4,21 +4,17 @@ import datetime
 import openpyxl
 from django.views.decorators.csrf import csrf_exempt
 
-
 def calculate_mrr_and_churn(jsonData):
     monthly_data = defaultdict(lambda: {'mrr': 0, 'totalCustomers': 0, 'churnedCustomers': 0})
     
     for row in jsonData:
-        print("Processing row:", row)  # Debugging statement
-
-        start_date = row['data início']
-        if start_date is None:
-            print("Skipping row due to no start date")  # Debugging statement
+        start_date = row.get('data início')
+        if not start_date:
             continue
 
-        end_date = row['data cancelamento'] if row['data cancelamento'] else datetime.datetime.now()
-        monthly_value = row['valor']
-        if row['periodicidade'] == 'Anual':
+        end_date = row.get('data cancelamento', datetime.datetime.now())
+        monthly_value = row.get('valor', 0)
+        if row.get('periodicidade') == 'Anual':
             monthly_value /= 12
 
         month = start_date
@@ -26,9 +22,9 @@ def calculate_mrr_and_churn(jsonData):
             month_key = month.strftime('%m-%Y')
             monthly_data[month_key]['mrr'] += monthly_value
             monthly_data[month_key]['totalCustomers'] += 1
-            month = month + datetime.timedelta(days=30)  # Approximation to next month
+            month = month + datetime.timedelta(days=30)
 
-        if row['data cancelamento']:
+        if row.get('data cancelamento'):
             churn_month_key = end_date.strftime('%m-%Y')
             monthly_data[churn_month_key]['churnedCustomers'] += 1
 
@@ -38,18 +34,13 @@ def calculate_mrr_and_churn(jsonData):
     return monthly_mrr, monthly_churn_rate
 
 def calculate_additional_metrics(jsonData):
-    total_revenue = sum(row['valor'] for row in jsonData if row['valor'] is not None)
-    number_of_customers = len(set(row['ID assinante'] for row in jsonData if row['ID assinante'] is not None))
+    total_revenue = sum(row.get('valor', 0) for row in jsonData)
+    number_of_customers = len({row.get('ID assinante') for row in jsonData if row.get('ID assinante')})
 
-    # Calculate ARPU (Average Revenue Per User)
     arpu = total_revenue / number_of_customers if number_of_customers > 0 else 0
-
-    # Assuming each row represents a transaction or subscription renewal, calculate LTV
-    # LTV here is simplified as the average revenue per customer
-    ltv = total_revenue / number_of_customers if number_of_customers > 0 else 0
+    ltv = arpu  # Simplified calculation
 
     return {'arpu': arpu, 'ltv': ltv}
-
 
 @csrf_exempt
 def upload_file(request):
@@ -62,23 +53,21 @@ def upload_file(request):
         sheet = workbook.active
         jsonData = []
 
-        for row in sheet.iter_rows(values_only=True, min_row=2):  # Assuming first row is headers
+        for row in sheet.iter_rows(values_only=True, min_row=2):
             jsonData.append({
-                'data início': row[3],  # Directly using the datetime object from the Excel file
+                'data início': row[3],
                 'valor': row[7],
                 'periodicidade': row[0],
-                'data cancelamento': row[6],  # This can be None or a datetime object
+                'data cancelamento': row[6],
             })
 
-        additional_metrics = calculate_additional_metrics(jsonData)
         monthlyMRR, monthlyChurnRate = calculate_mrr_and_churn(jsonData)
+        additional_metrics = calculate_additional_metrics(jsonData)
 
-        response_data = {
+        return JsonResponse({
             'monthlyMRR': monthlyMRR,
             'monthlyChurnRate': monthlyChurnRate,
             'additionalMetrics': additional_metrics
-        }
+        })
 
-        return JsonResponse(response_data)
-    
     return JsonResponse({'error': 'Invalid request'}, status=400)
