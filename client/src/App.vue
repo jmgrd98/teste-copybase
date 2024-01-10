@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col items-center text-center justify-center p-10 h-screen">
+    <img src="./assets/copybase.svg" alt="Copybase logo" />
     <div class="flex flex-col items-center">
       <input type="file" class="cursor-pointer block w-full text-sm text-gray-500
           file:mr-4 file:py-2 file:px-4
