@@ -24,4 +24,5 @@ Este aplicativo é uma solução web full-stack que integra um frontend Vue.js c
    cd python-server
    docker build -t django-app .
    docker run -p 8000:8000 django-app
+   ``
    
