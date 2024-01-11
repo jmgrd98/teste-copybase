@@ -1,8 +1,10 @@
 <template>
-  <div class="flex flex-col items-center text-center justify-center p-10 h-screen">
+  <div class="flex flex-col items-center text-center w-screen h-screen">
+    <header class="bg-[#41167F] h-20 w-full p-5">
     <img src="./assets/copybase.svg" alt="Copybase logo" />
-    <div class="flex flex-col items-center">
-      <input type="file" class="cursor-pointer block w-full text-sm text-gray-500
+  </header>
+    <div class="flex flex-col items-center m-auto">
+      <input type="file" class="cursor-pointer w-full text-sm text-gray-500
           file:mr-4 file:py-2 file:px-4
           file:rounded-full file:border-0
           file:text-sm file:font-semibold
@@ -10,7 +12,7 @@
           hover:file:bg-violet-100"
           @change="handleFileChange" />
       <button @click="uploadFile"
-              class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              class="mt-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Enviar
       </button>
     </div>
