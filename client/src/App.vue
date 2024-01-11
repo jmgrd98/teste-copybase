@@ -74,7 +74,7 @@ const mrrData = ref([]);
 const churnRateData = ref([]);
 const arpuData = ref(0);
 const ltvData = ref(0);
-let showToast = false;
+const showToast = ref(false);
 
 
 const mrrChartData = computed(() => ({
@@ -115,9 +115,10 @@ const handleFileChange = (event: any) => {
 
 const uploadFile = async () => {
   if (!file.value) {
-    
-    showToast = true;
-    console.log(showToast)
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000)
     return;
   }
 
