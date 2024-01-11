@@ -19,10 +19,41 @@ Este aplicativo é uma solução web full-stack que integra um frontend Vue.js c
 
 ### Configuração do Backend em Django
 
-1. Apenas rode o container:
-   ``bash
+1. Navegue até a pasta do servidor:
+   ``
    cd python-server
+  ``
+2. Rode o container:
+   
+   ``
    docker build -t django-app .
    docker run -p 8000:8000 django-app
+   ``
+
+### Configuração do Backend em Node
+
+1. Navegue até a pasta do servidor:
+   ``
+   cd server
+   ``
+2. Rode o container:
+   ``
+   docker build -t node-app .
+   docker run -p 3000:3000 node-app
+   ``
+
+### Configuração do Frontend
+
+1. Navegue até a pasta do frontend:
+   ``
+   cd client
+   ``
+2. Instale as dependências
+   ``
+   npm install
+   ``
+3. Inicie a aplicação
+   ``
+   npm run dev
    ``
    
