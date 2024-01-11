@@ -1,3 +1,5 @@
+
+import Toast from './components/Toast.vue';
 <template>
   <div class="flex flex-col items-center text-center w-screen h-screen">
     <header class="bg-[#41167F] h-20 w-full p-5">
@@ -56,6 +58,7 @@
     />
     </div>
 
+    <Toast v-if="showToast"/>
   </div>
 </div>
 </template>
@@ -64,12 +67,14 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import BarChart from './components/BarChart.vue'
+import Toast from './components/Toast.vue';
 
 const file = ref(null);
 const mrrData = ref([]);
 const churnRateData = ref([]);
 const arpuData = ref(0);
 const ltvData = ref(0);
+let showToast = false;
 
 
 const mrrChartData = computed(() => ({
@@ -110,7 +115,9 @@ const handleFileChange = (event: any) => {
 
 const uploadFile = async () => {
   if (!file.value) {
-    alert("Please select a file first.");
+    
+    showToast = true;
+    console.log(showToast)
     return;
   }
 
