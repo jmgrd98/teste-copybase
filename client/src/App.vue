@@ -12,15 +12,15 @@
           hover:file:bg-violet-100"
           @change="handleFileChange" />
       <button @click="uploadFile"
-              class="mt-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              class="bg-[#41167F] mt-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Enviar
       </button>
     </div>
   
 
-  <div class="mt-10 flex flex-wrap gap-5 items-center w-full">
+  <div class="flex flex-wrap gap-5 justify-center items-center w-full p-10">
 
-    <div class="max-w-[400px]">
+    <div class="max-w-[600px]">
     <BarChart
       v-if="mrrData.length"
       :chartData="mrrChartData"
@@ -29,7 +29,7 @@
     />
     </div>
 
-    <div class="max-w-[400px]">
+    <div class="max-w-[600px]">
     <BarChart
       v-if="churnRateData.length"
       :chartData="churnRateChartData"
@@ -38,9 +38,8 @@
     />
   </div>
 
-  <div class="max-w-[400px]">
+  <div class="max-w-[600px]">
     <BarChart
-      class="max-w-[400px]"
       v-if="arpuData"
       :chartData="arpuChartData"
       :chartOptions="{ responsive: true }"
@@ -48,9 +47,8 @@
     />
     </div>
 
-    <div class="max-w-[400px]">
+    <div class="max-w-[600px]">
     <BarChart
-      class="max-w-[400px]"
       v-if="ltvData"
       :chartData="ltvChartData"
       :chartOptions="{ responsive: true }"
@@ -63,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import BarChart from './components/BarChart.vue'
 
@@ -120,8 +118,8 @@ const uploadFile = async () => {
   formData.append('spreadsheet', file.value);
 
   try {
-      const response = await axios.post('http://localhost:8000/myapp/upload/', formData, {
-      //  const response = await axios.post('http://localhost:3000/upload/', formData, {
+      // const response = await axios.post('http://localhost:8000/myapp/upload/', formData, {
+       const response = await axios.post('http://localhost:3000/upload/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -131,20 +129,12 @@ const uploadFile = async () => {
     arpuData.value = response.data.arpu;
     ltvData.value = response.data.ltv;
 
-    console.log('MRR Data:', response.data.monthlyMRR);
-    console.log('Churn Rate Data:', response.data.monthlyChurnRate);
-    console.log('ARPU:', response.data.arpu);
-    console.log('LTV:', response.data.ltv);
-    console.log('MRR Data:', response.data.monthlyMRR);
-    console.log('Churn Rate Data:', response.data.monthlyChurnRate);
   } catch (error) {
     console.error("Error uploading file:", error);
   }
 };
 
-onMounted(() => {
-  // Optionally, initialize charts with pre-loaded data
-});
+
 </script>
 
 <style scoped>
