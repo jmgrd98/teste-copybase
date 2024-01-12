@@ -48,16 +48,20 @@ Este aplicativo é uma solução web full-stack que integra um frontend Vue.js c
 ### Configuração do Frontend
 
 1. Navegue até a pasta do frontend:
-   
+
+
    ``
    cd client
    ``
 3. Instale as dependências:
+
    
    ``
    npm install
    ``
-4. Inicie a aplicação
+4. Inicie a aplicação:
+
+   
    ``
    npm run dev
    ``
